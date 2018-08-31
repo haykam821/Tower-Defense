@@ -7,7 +7,7 @@ can.height = window.innerHeight;
 const w = can.width;
 const h = can.height;
 
-const entities = [];
+let entities = [];
 
 function drawRect(context, x = 0, y = 0, width = 20, height = 20, color = "black") {
 	context.fillStyle = color;
@@ -50,7 +50,7 @@ class RenderBeam extends Beam {
 	constructor() {
   	super(...arguments);
     setTimeout(() => {
-    	entities.filter(item => item.id !== this.id);
+    	entities = entities.filter(item => item.id !== this.id);
     });
   }
 }
@@ -62,8 +62,15 @@ class Tracer extends Entity {
   }
   
   render(context) {
+  	drawRect(context, this.x, this.y);
+    
   	context.fillStyle = "black";
-  	context.fillText(0, 0, entities.length)
+  	context.fillText(entities.length, 50, 50);
+    entities.forEach(entity => {
+    	if (!(entity instanceof Beam)) {
+      	entities.push(new RenderBeam(this.x, this.y, entity.x, entity.y));
+      }
+    });
   }
 }
 
@@ -96,7 +103,6 @@ function randPos() {
 
 function render() {
 	ctx.fillStyle = "limegreen";
-	ctx.fillRect(0, 0, w, h);
   
   entities.forEach(entity => entity.render(ctx));
 
