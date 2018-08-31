@@ -10,8 +10,13 @@ const h = can.height;
 let entities = [];
 
 function drawRect(context, x = 0, y = 0, width = 20, height = 20, color = "black") {
+
 	context.fillStyle = color;
   context.fillRect(x - width / 2, y - height / 2, width, height);
+}
+
+function removeById(id) {
+	entities = entities.filter(entity => id !== entity.id);
 }
 
 class Entity {
@@ -19,14 +24,21 @@ class Entity {
   	this.x = x;
     this.y = y;
     
-    this.health = maxHealth;
+    this.health = randInt(0, maxHealth);
     this.maxHealth = maxHealth;
     
-    this.id = randInt(0, 9999);
+    this.id = performance.now();
   }
   
   render(context) {
   	drawRect(context, this.x, this.y);
+  }
+  
+  renderHealth(context) {
+  	const width = 27 * (this.health / this.maxHealth);
+  
+  	drawRect(context, this.x, this.y + 20, 30, 5);
+  	drawRect(context, this.x, this.y + 20, width, 2, "red");
   }
 }
 
@@ -39,6 +51,7 @@ class Beam extends Entity {
   
   render(context) {
   	context.strokeStyle = "red";
+    context.lineWidth = 5;
     context.beginPath();
     context.moveTo(this.x, this.y);
     context.lineTo(this.endX, this.endY);
@@ -50,8 +63,8 @@ class RenderBeam extends Beam {
 	constructor() {
   	super(...arguments);
     setTimeout(() => {
-    	entities = entities.filter(item => item.id !== this.id);
-    });
+    	removeById(this.id)
+    }, 100);
   }
 }
 
@@ -85,9 +98,6 @@ class Tower extends Entity {
   }
 }
 
-entities.push(new Tracer(...randPos()));
-entities.push(new Tower(...randPos()));
-
 function randInt(min = 0, max = 1) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -103,8 +113,16 @@ function randPos() {
 
 function render() {
 	ctx.fillStyle = "limegreen";
+  ctx.fillRect(0, 0, w, h);
   
-  entities.forEach(entity => entity.render(ctx));
+  entities.forEach(entity => {
+  	entity.render(ctx);
+  	entity.renderHealth(ctx);
+    
+  	if (entity.health < 0) {
+    	removeById(entity.id);
+    }
+  });
 
 	window.requestAnimationFrame(render);
 }
